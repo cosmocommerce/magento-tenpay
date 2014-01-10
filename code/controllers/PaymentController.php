@@ -49,6 +49,7 @@ class CosmoCommerce_CosmoTenpay_PaymentController extends Mage_Core_Controller_F
      */
 	public function redirectAction()
 	{
+    
 		$session = Mage::getSingleton('checkout/session');
 		$session->setCosmoTenpayPaymentQuoteId($session->getQuoteId());
 
@@ -64,12 +65,15 @@ class CosmoCommerce_CosmoTenpay_PaymentController extends Mage_Core_Controller_F
 			Mage::helper('cosmotenpay')->__('Customer was redirected to Tenpay')
 		);
 		$order->save();
+        
+        
+    
 
 		$this->getResponse()
 			->setBody($this->getLayout()
 				->createBlock('cosmotenpay/redirect')
 				->setOrder($order)
-				->toHtml());
+				->toHtml()); 
 
         $session->unsQuoteId();
     }
