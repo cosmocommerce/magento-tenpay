@@ -51,7 +51,15 @@ class CosmoCommerce_CosmoTenpay_Model_Payment extends Mage_Payment_Model_Method_
      */
     public function getCosmoTenpayUrl()
     {
-        $url = 'https://gw.tenpay.com/gateway/pay.htm';
+		$model = Mage::getModel('cosmotenpay/payment');
+		$sandbox=$model->getConfigData('sandbox'); 
+        
+        if($sandbox){
+            $url = 'https://sandbox.tenpay.com/api/gateway/pay.htm';
+            $url = 'https://gw.tenpay.com/gateway/pay.htm';
+        }else{
+            $url = 'https://gw.tenpay.com/gateway/pay.htm';
+        }
         return $url;
     }
 

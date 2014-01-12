@@ -42,12 +42,9 @@ class CosmoCommerce_CosmoTenpay_Block_Redirect extends Mage_Core_Block_Abstract
         $html = '<html><body>';
         $html.= $this->__('You will be redirected to Tenpay in a few seconds.');
         $html.= $formHTML;
-      // $html.= '<script type="text/javascript">document.getElementById("cosmotenpay_payment_checkout").submit();</script>';
+        $html.= '<script type="text/javascript">document.getElementById("cosmotenpay_payment_checkout").submit();</script>';
         $html.= '</body></html>';
 
-
-print_r($html);
-            echo 'af4';exit();
         return $html;
     }
 }
