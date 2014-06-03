@@ -92,7 +92,7 @@ class CosmoCommerce_CosmoTenpay_Model_Payment extends Mage_Payment_Model_Method_
 	 */
 	protected function getNotifyURL()
 	{
-		return Mage::getUrl('checkout/onepage/success', array('_secure' => true));
+		return Mage::getUrl('cosmotenpay/payment/notify', array('_secure' => true));
 	}
 
     /**
