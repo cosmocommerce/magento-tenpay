@@ -1,3 +1,4 @@
 code                                   app/code/community/CosmoCommerce/CosmoTenpay
 template      app/design/frontend/base/default/template/cosmotenpay
 CosmoCommerce_CosmoTenpay.xml                          app/etc/modules/CosmoCommerce_CosmoTenpay.xml
+skin/tenpay.gif      skin/frontend/base/default/images/tenpay.gif

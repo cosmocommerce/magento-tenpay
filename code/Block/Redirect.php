@@ -32,10 +32,11 @@ class CosmoCommerce_CosmoTenpay_Block_Redirect extends Mage_Core_Block_Abstract
             ->setName('cosmotenpay_payment_checkout')
             ->setMethod('GET')
             ->setUseContainer(true);
-        foreach ($standard->setOrder($this->getOrder())->getStandardCheckoutFormFields() as $field => $value) {
+        
+        $data=$standard->setOrder($this->getOrder())->getStandardCheckoutFormFields();
+        foreach ($data as $field => $value) {
             $form->addField($field, 'hidden', array('name' => $field, 'value' => $value));
         }
-
         $formHTML = $form->toHtml();
 
         $html = '<html><body>';
@@ -43,7 +44,6 @@ class CosmoCommerce_CosmoTenpay_Block_Redirect extends Mage_Core_Block_Abstract
         $html.= $formHTML;
         $html.= '<script type="text/javascript">document.getElementById("cosmotenpay_payment_checkout").submit();</script>';
         $html.= '</body></html>';
-
 
         return $html;
     }

@@ -51,7 +51,15 @@ class CosmoCommerce_CosmoTenpay_Model_Payment extends Mage_Payment_Model_Method_
      */
     public function getCosmoTenpayUrl()
     {
-        $url = $this->getConfigData('transport').'://'.$this->getConfigData('gateway');
+		$model = Mage::getModel('cosmotenpay/payment');
+		$sandbox=$model->getConfigData('sandbox'); 
+        
+        if($sandbox){
+            $url = 'https://sandbox.tenpay.com/api/gateway/pay.htm';
+            $url = 'https://gw.tenpay.com/gateway/pay.htm';
+        }else{
+            $url = 'https://gw.tenpay.com/gateway/pay.htm';
+        }
         return $url;
     }
 
@@ -148,101 +156,72 @@ class CosmoCommerce_CosmoTenpay_Model_Payment extends Mage_Payment_Model_Method_
         }
 		
 		
-		$_merchantAcctId=$this->getConfigData('partner_id');
-		$_version="v2.0";
-		$_key=$this->getConfigData('security_code');
-		$_signType="1";
-		$_payerContactType="1";
+		$_merchantAcctId=$this->getConfigData('partner_id'); 
+		$_key=$this->getConfigData('security_code'); 
 		$_orderId=$order->getRealOrderId();
-		$_orderAmount=sprintf('%.2f', $order->getBaseGrandTotal())*100;
-		$_orderTime=date('YmdHis');
-		$_productName=$order->getRealOrderId();
-		$_productNum="1";//???
-		$_productId=$order->getRealOrderId();
-		$_productDesc=$order->getRealOrderId();
-		$_ext1=$this->getConfigData('ext1');
-		$_ext2=$this->getConfigData('ext2');
-		$_bankId=$this->getConfigData('bank_id');
+		$_orderAmount=sprintf('%.2f', $order->getBaseGrandTotal())*100;  
+		//$_bankId=$this->getConfigData('bank_id');
 		
-		$_redoFlag=$this->getConfigData('redo_flag');//1代表同一订单号只允许提交1次；0表示同一订单号在没有支付成功的前提下可重复提交多次。默认为0建议实物购物车结算类商户采用0；虚拟产品类商户采用1
-		
-		$_pid=$this->getConfigData('pid'); ///合作伙伴在快钱的用户编号
+		 
 		
 		$_payType=$this->getConfigData('pay_type');
 		
 		$_payerName=$order->getCustomerName();
 		$_payerContact=$order->getCustomerEmail() ;
 
-		
-		//todo : url
-		$_pageUrl=$this->getConfigData('page_url');
-		$_bgUrl=$this->getConfigData('bg_url');
-		$_inputCharset=$this->getConfigData('input_charset');//1代表UTF-8; 2代表GBK; 3代表gb2312
-		$_language=$this->getConfigData('display_language');//1代表中文；2代表英文
-		
-		
-		
-		
-		
-		//生成加密签名串
-///请务必按照如下顺序和规则组成加密串！
-	$signMsgVal="";
-	$signMsgVal=$this->appendParam($signMsgVal,"inputCharset",$_inputCharset);
-	$signMsgVal=$this->appendParam($signMsgVal,"pageUrl",$_pageUrl);
-	$signMsgVal=$this->appendParam($signMsgVal,"bgUrl",$_bgUrl);
-	$signMsgVal=$this->appendParam($signMsgVal,"version",$_version);
-	$signMsgVal=$this->appendParam($signMsgVal,"language",$_language);
-	$signMsgVal=$this->appendParam($signMsgVal,"signType",$_signType);
-	$signMsgVal=$this->appendParam($signMsgVal,"merchantAcctId",$_merchantAcctId);
-	$signMsgVal=$this->appendParam($signMsgVal,"payerName",$_payerName);
-	$signMsgVal=$this->appendParam($signMsgVal,"payerContactType",$_payerContactType);
-	$signMsgVal=$this->appendParam($signMsgVal,"payerContact",$_payerContact);
-	$signMsgVal=$this->appendParam($signMsgVal,"orderId",$_orderId);
-	$signMsgVal=$this->appendParam($signMsgVal,"orderAmount",$_orderAmount);
-	$signMsgVal=$this->appendParam($signMsgVal,"orderTime",$_orderTime);
-	$signMsgVal=$this->appendParam($signMsgVal,"productName",$_productName);
-	$signMsgVal=$this->appendParam($signMsgVal,"productNum",$_productNum);
-	$signMsgVal=$this->appendParam($signMsgVal,"productId",$_productId);
-	$signMsgVal=$this->appendParam($signMsgVal,"productDesc",$_productDesc);
-	$signMsgVal=$this->appendParam($signMsgVal,"ext1",$_ext1);
-	$signMsgVal=$this->appendParam($signMsgVal,"ext2",$_ext2);
-	$signMsgVal=$this->appendParam($signMsgVal,"payType",$_payType);	
-	$signMsgVal=$this->appendParam($signMsgVal,"bankId",$_bankId);
-	$signMsgVal=$this->appendParam($signMsgVal,"redoFlag",$_redoFlag);
-	$signMsgVal=$this->appendParam($signMsgVal,"pid",$_pid);
-	$signMsgVal=$this->appendParam($signMsgVal,"key",$_key);
-	$signMsg= strtoupper(md5($signMsgVal));
+		 
+        $parameter=array();
+        
+        $parameter['partner']=$_merchantAcctId;
+        $parameter['out_trade_no']=$_orderId;
+        $parameter['total_fee']=$_orderAmount;
+        
+        $parameter['return_url']=$this->getNotifyURL();
+        $parameter['notify_url']=$this->getNotifyURL();
+        $parameter['body']=$_orderId;
+        $parameter['bank_type']='DEFAULT'; //银行类型，默认为财付通
+        //用户ip
+        $parameter['spbill_create_ip']=$_SERVER['REMOTE_ADDR'];//客户端IP
+        $parameter['fee_type']="1";//币种
+        $parameter['subject']=$_orderId;//商品名称，（中介交易时必填）
+        
+        //系统可选参数
+        $parameter['sign_type']='MD5';  //签名方式，默认为MD5，可选RSA
+        $parameter['service_version']='1.0'; //接口版本号
+        $parameter['input_charset']='utf-8'; //字符集
+        $parameter['sign_key_index']='1'; //密钥序号
 
+        //业务可选参数
+        $parameter['attach']='';  //附件数据，原样返回就可以了
+        $parameter['product_fee']=''; //商品费用
+        $parameter['transport_fee']='0'; //物流费用
+        $parameter['time_start']=date("YmdHis"); //订单生成时间
+        $parameter['time_expire']=''; //订单失效时间
+        $parameter['buyer_id']=''; //买方财付通帐号
+        $parameter['goods_tag']=''; //商品标记
+        $parameter['trade_mode']=$_payType; //交易模式（1.即时到帐模式，2.中介担保模式，3.后台选择（卖家进入支付中心列表选择））
+        $parameter['transport_desc']=''; //物流说明
+        $parameter['trans_type']='1'; //交易类型
+        $parameter['agentid']=''; //平台ID
+        $parameter['agent_type']=''; //代理模式（0.无代理，1.表示卡易售模式，2.表示网店模式）
+        $parameter['seller_id']=''; //卖家的商户号
 
+        
+            
+       
+		$signPars = "";
+		ksort($parameter);
+		foreach($parameter as $k => $v) {
+			if("" != $v && "sign" != $k) {
+				$signPars .= $k . "=" . $v . "&";
+			}
+		}
+		$signPars .= "key=" . $_key;
+		$sign = strtolower(md5($signPars));
 		
-		$parameter = array(
-			'inputCharset'=>$_inputCharset,
-			'pageUrl'=>$_pageUrl,
-			'bgUrl'=>$_bgUrl,
-			'version'=>$_version,
-			'language'=>$_language,
-			'signType'=>$_signType,
-			'merchantAcctId'=>$_merchantAcctId,
-			'payerName'=>$_payerName,
-			'payerContactType'=>$_payerContactType,
-			'payerContact'=>$_payerContact,
-			'orderId'=>$_orderId,
-			'orderAmount'=>$_orderAmount,
-			'orderTime'=>$_orderTime,
-			'productName'=>$_productName,
-			'productNum'=>$_productNum,
-			'productId'=>$_productId,
-			'productDesc'=>$_productDesc,
-			'ext1'=>$_ext1,
-			'ext2'=>$_ext2,
-			'payType'=>$_payType,
-			'bankId'=>$_bankId,
-			'redoFlag'=>$_redoFlag,
-			'pid'=>$_pid,
-			'signMsg'=>$signMsg
-		);
-						
-		
+        $parameter['sign']=$sign;
+        
+        
         return $parameter;
     }
 
